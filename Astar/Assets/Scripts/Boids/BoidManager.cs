@@ -4,16 +4,17 @@ using System.Collections.Generic;
 public class BoidManager : MonoBehaviour
 {
     //pacman example*
-    public GameObject mainPrefab;
+    [SerializeField] private GameObject mainPrefab;
 
-    public GameObject boidPrefab;
-    public int boidCount = 10;
-    public float speedLimit = 5f;
-    public float neighborRadius = 3f;
-    public float separationDistance = 2f;
-    public Vector3 bounds = new Vector3(10f, 10f, 10f);
+    [SerializeField] private GameObject boidPrefab;
+    [SerializeField] private int boidCount = 10;
+    [SerializeField] private float speedLimit = 5f;
+    [SerializeField] private float neighborRadius = 3f;
+    [SerializeField] private float separationDistance = 2f;
+    [SerializeField] private Vector3 bounds = new Vector3(10f, 10f, 10f);
 
     private List<Boid> _boids = new List<Boid>();
+
 
     void Start()
     {
@@ -78,11 +79,11 @@ public class BoidManager : MonoBehaviour
         Vector3 perceivedCenter = Vector3.zero;
         int neighborCount = 0;
 
-        foreach (Boid other in _boids)
+        foreach (Boid b in _boids)
         {
-            if (other != boid && Vector3.Distance(boid.transform.position, other.transform.position) < neighborRadius)
+            if (b != boid && Vector3.Distance(boid.transform.position, b.transform.position) < neighborRadius)
             {
-                perceivedCenter += other.transform.position;
+                perceivedCenter += b.transform.position;
                 neighborCount++;
             }
         }
@@ -100,11 +101,11 @@ public class BoidManager : MonoBehaviour
     {
         Vector3 separationVector = Vector3.zero;
 
-        foreach (Boid other in _boids)
+        foreach (Boid b in _boids)
         {
-            if (other != boid && Vector3.Distance(boid.transform.position, other.transform.position) < separationDistance)
+            if (b != boid && Vector3.Distance(boid.transform.position, b.transform.position) < separationDistance)
             {
-                separationVector -= (other.transform.position - boid.transform.position);
+                separationVector -= (b.transform.position - boid.transform.position);
             }
         }
 
@@ -116,11 +117,11 @@ public class BoidManager : MonoBehaviour
         Vector3 perceivedVelocity = Vector3.zero;
         int neighborCount = 0;
 
-        foreach (Boid other in _boids)
+        foreach (Boid b in _boids)
         {
-            if (other != boid && Vector3.Distance(boid.transform.position, other.transform.position) < neighborRadius)
+            if (b != boid && Vector3.Distance(boid.transform.position, b.transform.position) < neighborRadius)
             {
-                perceivedVelocity += other.velocity;
+                perceivedVelocity += b.velocity;
                 neighborCount++;
             }
         }
