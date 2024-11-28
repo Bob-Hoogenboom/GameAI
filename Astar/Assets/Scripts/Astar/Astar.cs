@@ -5,10 +5,6 @@ using System.Linq;
 
 public class Astar
 {
-    private List<Node> _nodeBase = new List<Node>();
-    private Node _currentNode;
-    private Node _goalNode;
-
     /// <summary>
     /// TODO: Implement this function so that it returns a list of Vector2Int positions which describes a path from the startPos to the endPos
     /// Note that you will probably need to add some helper functions
@@ -21,54 +17,125 @@ public class Astar
 
     public List<Vector2Int> FindPathToTarget(Vector2Int startPos, Vector2Int endPos, Cell[,] grid)
     {
-        //makes the NodeGrid once except if its count changes then it regenerates
-        if (_nodeBase.Count != grid.Length) 
+        //failsafe
+        if(!IsWithinBounds(endPos, grid))
         {
-            Debug.Log("You are missing some Nodes, Let me help you! NodeCount: " + _nodeBase.Count() + " GridLength: " + grid.Length);
-            _nodeBase.Clear();
-            _nodeBase = InstantiateNodes(grid); 
+            Debug.LogWarning("EndPosition is out of bounds, try another position");
+            return new List<Vector2Int>();
         }
 
-        //Make 2 Lists:
+        // 2 lists to keep track of nodes we need to search and nodes we have searched
         List<Node> toSearch = new List<Node>();
-        List<Node> visited = new List<Node>();
+        List<Node> searched = new List<Node>();
 
-        //Define start en goal pos:
-        _currentNode = GetNodeByGridPos(startPos);
-        _goalNode = GetNodeByGridPos(endPos);
+        // Create start and goal nodes
+        Node startNode = new Node(startPos, null, 0, CalculateHeuristic(startPos, endPos));
+        Node goalNode = new Node(endPos, null, 0, 0);
 
+        toSearch.Add(startNode);
 
-        //continue aStar as normal but check in one of the while loops for walls#
+        while (toSearch.Count > 0)
+        {
+            Node currentNode = toSearch.OrderBy(node => node.FScore).First();
 
+            if (currentNode.position == goalNode.position)
+                return ReconstructPath(currentNode);
 
+            toSearch.Remove(currentNode);
+            searched.Add(currentNode);
 
+            // Get valid neighbors of the current node
+            foreach (Node neighbor in GetNeighbors(currentNode, grid, endPos))
+            {
+                if (searched.Contains(neighbor))
+                    continue;
 
-        return null;
+                float nodeCost = currentNode.GScore + 1; 
+
+                if (!toSearch.Contains(neighbor) || nodeCost < neighbor.GScore)
+                {
+                    neighbor.parent = currentNode;
+                    neighbor.GScore = nodeCost;
+                    neighbor.HScore = CalculateHeuristic(neighbor.position, endPos);
+
+                    if (!toSearch.Contains(neighbor))
+                        toSearch.Add(neighbor);
+                }
+            }
+        }
+
+        // no path was found
+        return new List<Vector2Int>();
     }
 
-    //instantiates node grid by cell grid
-    private List<Node> InstantiateNodes(Cell[,] grid)
+    // Checks if the grid position is within bounds
+    private bool IsWithinBounds(Vector2Int position, Cell[,] grid)
     {
-        List<Node> nodes = new List<Node>();
-        foreach (Cell cell in grid)
-        {
-            Node node = new Node();
-            node.position = cell.gridPosition;
-
-            nodes.Add(node); 
-        }
-        return nodes;
+        return position.x >= 0 && position.y >= 0 &&
+               position.x < grid.GetLength(0) && position.y < grid.GetLength(1);
     }
 
-    //finds Node based on GridPosition
-    private Node GetNodeByGridPos(Vector2Int value)
+    // We need the Heuristic value to determain a path
+    private int CalculateHeuristic(Vector2Int current, Vector2Int goal)
     {
-        foreach (Node node in _nodeBase) 
+        return Mathf.Abs(current.x - goal.x) + Mathf.Abs(current.y - goal.y);
+    }
+
+    // Function to return the path by returning the parenmts
+    private List<Vector2Int> ReconstructPath(Node node)
+    {
+        List<Vector2Int> path = new List<Vector2Int>();
+        while (node != null)
         {
-            if (node.position == value) return node;
+            path.Add(node.position);
+            node = node.parent;
+        }
+        path.Reverse();
+        return path;
+    }
+
+    // Function to get valid neighbours
+    private List<Node> GetNeighbors(Node node, Cell[,] grid, Vector2Int goal)
+    {
+        List<Node> neighbors = new List<Node>();
+        Vector2Int[] directions = { Vector2Int.up, Vector2Int.down, Vector2Int.left, Vector2Int.right };
+        Wall[] correspondingWalls = { Wall.UP, Wall.DOWN, Wall.LEFT, Wall.RIGHT };
+
+        for (int i = 0; i < directions.Length; i++)
+        {
+            Vector2Int neighborPos = node.position + directions[i];
+
+            // Check bounds
+            if (!IsWithinBounds(neighborPos, grid)) continue;
+
+            Cell currentCell = grid[node.position.x, node.position.y];
+            Cell neighborCell = grid[neighborPos.x, neighborPos.y];
+
+            // Check walls
+            if (currentCell.HasWall(correspondingWalls[i])) continue;
+            Wall oppositeWall = GetOppositeWall(correspondingWalls[i]);
+            if (neighborCell.HasWall(oppositeWall)) continue;
+
+            // Ensure neighbor is unique by position
+            if (neighbors.Any(n => n.position == neighborPos)) continue;
+
+            neighbors.Add(new Node(neighborPos, node, 0, 0));
         }
 
-        return null;
+        return neighbors;
+    }
+
+    // Helper function to get the opposite wall
+    private Wall GetOppositeWall(Wall wall)
+    {
+        switch (wall)
+        {
+            case Wall.UP: return Wall.DOWN;
+            case Wall.DOWN: return Wall.UP;
+            case Wall.LEFT: return Wall.RIGHT;
+            case Wall.RIGHT: return Wall.LEFT;
+            default: return 0;
+        }
     }
 
 
