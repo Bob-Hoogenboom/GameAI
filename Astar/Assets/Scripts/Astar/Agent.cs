@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using UnityEngine;
+
 public class Agent : MonoBehaviour
 {
     public int moveButton = 0;

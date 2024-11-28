@@ -35,7 +35,7 @@ public class Cell
             {
                 int cellX = this.gridPosition.x + x;
                 int cellY = this.gridPosition.y + y;
-                if (cellX < 0 || cellX >= grid.GetLength(0) || cellY < 0 || cellY >= grid.GetLength(1) || Mathf.Abs(x) == Mathf.Abs(y))
+                if (cellX < 0 || cellX >= grid.GetLength(0) || cellY < 0 || cellY >= grid.GetLength(1) || Mathf.Abs(x) == Mathf.Abs(y)) // if X is outside bounds or Y is outside the bounds
                 {
                     continue;
                 }
