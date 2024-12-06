@@ -6,7 +6,6 @@ using System.Linq;
 public class Astar
 {
     private List<Node> _nodeBase = new List<Node>();
-    private Node _currentNode;
     private Node _goalNode;
 
     /// <summary>
@@ -22,20 +21,60 @@ public class Astar
     public List<Vector2Int> FindPathToTarget(Vector2Int startPos, Vector2Int endPos, Cell[,] grid)
     {
         //makes the NodeGrid once except if its count changes then it regenerates
-        if (_nodeBase.Count != grid.Length) 
+        if (_nodeBase.Count != grid.Length)
         {
             Debug.Log("You are missing some Nodes, Let me help you! NodeCount: " + _nodeBase.Count() + " GridLength: " + grid.Length);
             _nodeBase.Clear();
-            _nodeBase = InstantiateNodes(grid); 
+            _nodeBase = InstantiateNodes(grid);
         }
 
         //Make 2 Lists:
         List<Node> toSearch = new List<Node>();
         List<Node> visited = new List<Node>();
 
-        //Define start en goal pos:
-        _currentNode = GetNodeByGridPos(startPos);
-        _goalNode = GetNodeByGridPos(endPos);
+        Node startNode = new Node(startPos,null, 0, CalculateHeuristic(startPos, endPos));
+        Node endNode = new Node(endPos, null, 0, 0);
+
+        toSearch.Add(startNode);
+
+        while (toSearch.Any())
+        {
+            Node currentNode = toSearch.OrderBy(node => node.FScore).First(); //orders the list by Lowest FScore
+
+            if (currentNode == endNode)
+            {
+                return null;
+            }
+            //#reconstruct the path but in reverse
+
+            toSearch.Remove(currentNode);
+            visited.Add(currentNode);
+
+            Cell currentCell = GetCellByPos(currentNode.position, grid);
+
+            List<Cell> neighbourCells = currentCell.GetNeighbours(grid);
+
+            foreach (Cell cell in neighbourCells)
+            {
+                //if in open update || if not then make
+                Node neighbourNode = new Node(cell.gridPosition, currentNode, currentNode.GScore, CalculateHeuristic(cell.gridPosition, endPos));
+
+                if (visited.Contains(neighbourNode)) // We are assuming everything is traversable so only check contain*
+                { 
+                    continue; 
+                }
+
+                if (!toSearch.Contains(neighbourNode))
+                {
+                    neighbourNode.GScore = neighbourNode.parent.GScore +1;
+                    neighbourNode.parent = currentNode;
+
+                    toSearch.Add(neighbourNode);
+                }
+
+            }
+
+        }
 
 
         //continue aStar as normal but check in one of the while loops for walls#
@@ -71,6 +110,18 @@ public class Astar
         return null;
     }
 
+    //finds Cell based on GridPosition
+    private Cell GetCellByPos(Vector2Int value, Cell[,] grid)
+    {
+        return grid[value.x, value.y];
+    }
+
+    //for calculating Hscore
+    private int CalculateHeuristic(Vector2Int current, Vector2Int goal)
+    {
+        return Mathf.Abs(current.x - goal.x) + Mathf.Abs(current.y - goal.y);
+    }
+
 
     /// <summary>
     /// This is the Node class you can use this class to store calculated FScores for the cells of the grid, you can leave this as it is
@@ -83,7 +134,7 @@ public class Astar
         public float FScore { //GScore + HScore
             get { return GScore + HScore; }
         }
-        public float GScore; //Current Travelled Distance
+        public int GScore; //Current Travelled Distance
         public float HScore; //Distance estimated based on Heuristic
 
         public Node() { }
