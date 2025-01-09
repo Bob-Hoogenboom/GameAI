@@ -18,27 +18,37 @@ public class BehaviourTree : Node
         name = n;
     }
 
+    public override Status Process()
+    {
+        return children[currentChild].Process();
+    }
+
+    struct NodeLevel 
+    {
+        public int level;
+        public Node node;
+    }
+
     public void DebugTree()
     {
         //without recursion
-        string treePrintOut = "N/A";
+        string treePrintOut = "~";
 
-        Stack<Node> nodeStack = new Stack<Node>();
+        Stack<NodeLevel> nodeStack = new Stack<NodeLevel>();
         Node currentNode = this;
-        nodeStack.Push(currentNode); //adds the root of the node in the stack
+        nodeStack.Push(new NodeLevel { level = 0, node = currentNode }); //adds the root of the node in the stack
 
         while (nodeStack.Count != 0)
         {
-            Node nextNode = nodeStack.Pop();
-            treePrintOut += nextNode.name + "\n";
+            NodeLevel nextNode = nodeStack.Pop();
+            treePrintOut += new string ('-', nextNode.level) + nextNode.node.name + "\n"; //the amount of '-'s defines what level the node is in the tree
 
             //print the tree in reverse (reverse from stack.Pop())
-            for (int i = nextNode.children.Count - 1; i >= 0; i--)
+            for (int i = nextNode.node.children.Count - 1; i >= 0; i--)
             {
-                nodeStack.Push(nextNode.children[i]);
+                nodeStack.Push(new NodeLevel { level = nextNode.level + 1, node = nextNode.node.children[i] });
             }
         }
         Debug.Log(treePrintOut);
-        
     }
 }
