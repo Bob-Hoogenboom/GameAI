@@ -12,11 +12,14 @@ public class EnemyBehaviour : MonoBehaviour
     private BehaviourTree _tree;
     private NavMeshAgent _agent;
 
-    public GameObject weapon;
+    public GameObject weaponA;
+    public GameObject weaponB;
     public GameObject player;
 
     public enum ActionState { IDLE, MOVING };
     ActionState state = ActionState.IDLE;
+
+    Node.Status treeStatus = Node.Status.RUNNING;
 
     //pseudo attack*
     private int _shots = 0;
@@ -29,25 +32,31 @@ public class EnemyBehaviour : MonoBehaviour
         _agent = GetComponent<NavMeshAgent>();
 
         _tree = new BehaviourTree();
-        Node pickUpWeapon = new Node("pick_up_weapon");
-        Leaf goToWeapon = new Leaf("go_to_weapon", GoToWeapon);
+        Sequence attack = new Sequence("attack");
+        Leaf goToWeaponA = new Leaf("go_to_weapon_A", GoToWeaponA);
+        Leaf goToWeaponB = new Leaf("go_to_weapon_B", GoToWeaponB);
         Leaf attackPlayer = new Leaf("attack_player", AttackPlayer);
+        Selector PickWeapon = new Selector("Pick_Weapon");
 
-        pickUpWeapon.AddChild(goToWeapon);
-        pickUpWeapon.AddChild(attackPlayer);
+        PickWeapon.AddChild(goToWeaponA);
+        PickWeapon.AddChild(goToWeaponB);
 
-        _tree.AddChild(pickUpWeapon);
+        attack.AddChild(PickWeapon);
+        attack.AddChild(attackPlayer);
+        _tree.AddChild(attack);
 
         _tree.DebugTree();
-
-        _tree.Process();
-
     }
 
-    //every method you give to a Node has to use the same format as the Tick() method
-    public Node.Status GoToWeapon()
+    //every method you give to a No de has to use the same format as the Tick() method
+    public Node.Status GoToWeaponA()
     {
-        return GoToLocation(weapon.transform.position);
+        return GoToWeapon(weaponA);
+    }
+
+    public Node.Status GoToWeaponB()
+    {
+        return GoToWeapon(weaponB);
     }
 
     public Node.Status AttackPlayer()
@@ -61,6 +70,7 @@ public class EnemyBehaviour : MonoBehaviour
             GoToLocation(transform.position);
             if (_currentTimer < 0)
             {
+                _currentTimer = _timer;
                 Debug.Log("Pew!");
                 _shots++;
                 if (_shots >= 3) return Node.Status.SUCCESS;
@@ -77,6 +87,24 @@ public class EnemyBehaviour : MonoBehaviour
         return Node.Status.RUNNING;
     }
 
+    public Node.Status GoToWeapon(GameObject weapon)
+    {
+        Node.Status s = GoToLocation(weapon.transform.position);
+        if (s == Node.Status.SUCCESS)
+        {
+            if (!weapon.GetComponent<Gun>().empty) //check if gun is not empty = SUCCES
+            {
+                weapon.transform.parent = this.gameObject.transform;
+                return Node.Status.SUCCESS;
+            }
+            return Node.Status.FAILED; //gun is empty = FAILED, check next gun
+        }
+        else
+        {
+            return s;
+        }
+    }
+
     private Node.Status GoToLocation(Vector3 destination)
     {
         float distanceFromTarget = Vector3.Distance(transform.position, destination);
@@ -85,7 +113,7 @@ public class EnemyBehaviour : MonoBehaviour
             _agent.SetDestination(destination);
             state = ActionState.MOVING;
         }
-        else if (Vector3.Distance(_agent.pathEndPosition, destination) >= 2)
+        else if (Vector3.Distance(_agent.pathEndPosition, destination) >= 1)
         {
             state = ActionState.IDLE;
             return Node.Status.FAILED;
@@ -97,5 +125,13 @@ public class EnemyBehaviour : MonoBehaviour
         }
 
         return Node.Status.RUNNING;
+    }
+
+    void Update()
+    {
+        if(treeStatus == Node.Status.RUNNING)
+        {
+            treeStatus = _tree.Process();
+        }
     }
 }

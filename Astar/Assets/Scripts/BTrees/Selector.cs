@@ -2,9 +2,9 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-public class Sequence : Node
+public class Selector : Node
 {
-    public Sequence(string n)
+    public Selector(string n)
     {
         name = n;
     }
@@ -12,17 +12,21 @@ public class Sequence : Node
     public override Status Process()
     {
         Status childStatus = children[currentChild].Process();
-        if(childStatus == Status.RUNNING) return Status.RUNNING;
-        if(childStatus == Status.FAILED) return childStatus;
+        if (childStatus == Status.RUNNING) return Status.RUNNING;
 
-        currentChild++;
-        if(currentChild >= children.Count)
+        if (childStatus == Status.SUCCESS)
         {
             currentChild = 0;
             return Status.SUCCESS;
         }
 
+        currentChild++;
+        if(currentChild >= children.Count)
+        {
+            currentChild = 0;
+            return Status.FAILED;
+        }
+
         return Status.RUNNING;
     }
 }
- 
