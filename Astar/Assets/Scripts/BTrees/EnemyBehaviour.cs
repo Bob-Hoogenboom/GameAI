@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using UnityEngine;
 using UnityEngine.AI;
 using static Astar;
@@ -9,19 +10,29 @@ using static Astar;
 /// </summary>
 public class EnemyBehaviour : MonoBehaviour
 {
+    [Header("References")]
     private BehaviourTree _tree;
     private NavMeshAgent _agent;
-
-    public GameObject weaponA;
-    public GameObject weaponB;
     public GameObject player;
+
+    public float checkRange = 5f;
+    public Vector3 patrolOrigin = new Vector3(0, 0, 0);
 
     public enum ActionState { IDLE, MOVING };
     ActionState state = ActionState.IDLE;
 
     Node.Status treeStatus = Node.Status.RUNNING;
 
-    //pseudo attack*
+
+    [Header("Patrol Variables")]    
+    public Vector3 waypoint;
+    public float waypointRange = 7f;
+
+
+    [Header("Attack Variables")]
+    public GameObject weaponA;
+    public GameObject weaponB;
+
     private float _timer = 3f;
     private float _currentTimer = 3f;
 
@@ -31,37 +42,91 @@ public class EnemyBehaviour : MonoBehaviour
         _agent = GetComponent<NavMeshAgent>();
 
         _tree = new BehaviourTree();
-        Selector enemy = new Selector("enemy_selector");
-        Sequence attack = new Sequence("attack");
-        Leaf checkPlayerRange = new Leaf("check_player_range", CheckPlayerRange);
+
+        // ----
         Leaf goToWeaponA = new Leaf("go_to_weapon_A", GoToWeaponA);
         Leaf goToWeaponB = new Leaf("go_to_weapon_B", GoToWeaponB);
+
+        // ---
+        Leaf getWaypoint = new Leaf("get_waypoint", GetNewWaypoint);
+        Leaf goToWaypoint = new Leaf("go_to_waypoint", GoToWaypoint);
+        Leaf idle = new Leaf("idle", Idle);
+        Leaf returnToOrigin = new Leaf("return_to_origin", ReturnToOrigin);
+
+        Leaf checkPlayerRange = new Leaf("check_player_range", CheckPlayerRange);
+        Selector pickWeapon = new Selector("Pick_Weapon");
+        pickWeapon.AddChild(goToWeaponA);
+        pickWeapon.AddChild(goToWeaponB);
         Leaf attackPlayer = new Leaf("attack_player", AttackPlayer);
-        Selector PickWeapon = new Selector("Pick_Weapon");
-       
 
+        // --
+        Sequence patrol = new Sequence("patrol");
+        patrol.AddChild(getWaypoint);
+        patrol.AddChild(goToWaypoint);
+        patrol.AddChild(idle);
+        patrol.AddChild(returnToOrigin);
 
-        PickWeapon.AddChild(goToWeaponA);
-        PickWeapon.AddChild(goToWeaponB);
-
+        Sequence attack = new Sequence("attack");
         attack.AddChild(checkPlayerRange);
-        attack.AddChild(PickWeapon);
+        attack.AddChild(pickWeapon);
         attack.AddChild(attackPlayer);
-        _tree.AddChild(attack);
 
+        // -
+        Selector enemyAction = new Selector("enemy_action");
+        enemyAction.AddChild(patrol);
+        enemyAction.AddChild(attack);
+        
+        //~
+        _tree.AddChild(enemyAction);
+        
         _tree.DebugTree();
     }
 
     public Node.Status CheckPlayerRange()
     {
-        if(Vector3.Distance(transform.position, player.transform.position) < 5)
+        if(Vector3.Distance(transform.position, player.transform.position) < checkRange)
         {
             return Node.Status.SUCCESS;
         }
         return Node.Status.FAILED;
     }
 
-    //every method you give to a No de has to use the same format as the Tick() method
+    //every method you give to a Node has to use the same format as the Tick() method
+
+    public Node.Status Idle()
+    {
+        if (CheckPlayerRange() == Node.Status.SUCCESS) { return Node.Status.FAILED; }
+
+        _currentTimer -= Time.deltaTime;
+
+        if (_currentTimer < 0)
+        {
+            _currentTimer = _timer;
+            return Node.Status.SUCCESS;
+        }
+        return Node.Status.RUNNING;
+    }
+
+    public Node.Status GetNewWaypoint()
+    {
+        float randomZ = Random.Range(-waypointRange, waypointRange);
+        float randomX = Random.Range(-waypointRange, waypointRange);
+
+        waypoint = new Vector3(this.transform.position.x + randomX, this.transform.position.y, this.transform.position.z + randomZ);
+
+        //checks if the waypoint is on the NavMesh 
+        if (NavMesh.SamplePosition(waypoint, out _, 1.0f, NavMesh.AllAreas)) return Node.Status.SUCCESS;
+
+        return Node.Status.FAILED;
+    }
+
+    public Node.Status GoToWaypoint()
+    {
+        //check if player is in range when going to the waypoint
+        if (CheckPlayerRange() == Node.Status.SUCCESS) { return Node.Status.FAILED; }
+        return GoToLocation(waypoint);
+    }
+
     public Node.Status GoToWeaponA()
     {
         return GoToWeapon(weaponA);
@@ -70,6 +135,11 @@ public class EnemyBehaviour : MonoBehaviour
     public Node.Status GoToWeaponB()
     {
         return GoToWeapon(weaponB);
+    }
+
+    public Node.Status ReturnToOrigin()
+    {
+        return GoToLocation(patrolOrigin);
     }
 
     public Node.Status AttackPlayer()
@@ -140,7 +210,7 @@ public class EnemyBehaviour : MonoBehaviour
             state = ActionState.IDLE;
             return Node.Status.FAILED;
         }
-        else if (distanceFromTarget < 2)
+        else if (distanceFromTarget < 1)
         {
             state = ActionState.IDLE;
             return Node.Status.SUCCESS;
@@ -153,9 +223,8 @@ public class EnemyBehaviour : MonoBehaviour
     //we want to stop as soon as the player has died*
     void Update()
     {
-        if(treeStatus != Node.Status.SUCCESS)
-        {
-            treeStatus = _tree.Process();
-        }
+        
+         treeStatus = _tree.Process();
+       
     }
 }
