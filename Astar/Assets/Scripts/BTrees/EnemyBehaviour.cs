@@ -22,9 +22,8 @@ public class EnemyBehaviour : MonoBehaviour
     Node.Status treeStatus = Node.Status.RUNNING;
 
     //pseudo attack*
-    private int _shots = 0;
-    private float _timer = 5f;
-    private float _currentTimer = 5f;
+    private float _timer = 3f;
+    private float _currentTimer = 3f;
 
 
     private void Start()
@@ -32,6 +31,7 @@ public class EnemyBehaviour : MonoBehaviour
         _agent = GetComponent<NavMeshAgent>();
 
         _tree = new BehaviourTree();
+        Selector enemy = new Selector("enemy_selector");
         Sequence attack = new Sequence("attack");
         Leaf checkPlayerRange = new Leaf("check_player_range", CheckPlayerRange);
         Leaf goToWeaponA = new Leaf("go_to_weapon_A", GoToWeaponA);
@@ -39,6 +39,8 @@ public class EnemyBehaviour : MonoBehaviour
         Leaf attackPlayer = new Leaf("attack_player", AttackPlayer);
         Selector PickWeapon = new Selector("Pick_Weapon");
        
+
+
         PickWeapon.AddChild(goToWeaponA);
         PickWeapon.AddChild(goToWeaponB);
 
@@ -52,7 +54,7 @@ public class EnemyBehaviour : MonoBehaviour
 
     public Node.Status CheckPlayerRange()
     {
-        if(Vector3.Distance(transform.position, player.transform.position) < 6)
+        if(Vector3.Distance(transform.position, player.transform.position) < 5)
         {
             return Node.Status.SUCCESS;
         }
@@ -78,19 +80,28 @@ public class EnemyBehaviour : MonoBehaviour
 
         if (distance <= 3)
         {
+            PlayerMovement playerMove = player.GetComponent<PlayerMovement>();
             GoToLocation(transform.position);
             if (_currentTimer < 0)
             {
                 _currentTimer = _timer;
                 Debug.Log("Pew!");
-                _shots++;
-                if (_shots >= 3) return Node.Status.SUCCESS;
+                playerMove.health--;
+
+                if (playerMove.health <= 0)
+                {
+                    return Node.Status.SUCCESS;
+                }
             }
         }
         else
         {
+            if(distance >= 10)
+            {
+                return Node.Status.FAILED;
+            }
+
             GoToLocation(player.transform.position);
-            _shots = 0;
             _currentTimer = _timer;
         }
 

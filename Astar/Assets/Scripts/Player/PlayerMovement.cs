@@ -7,6 +7,9 @@ public class PlayerMovement : MonoBehaviour
     public float moveSpeed = 5f;
     public float sprintSpeed;
 
+    //change for interface IDamagable*
+    public int health = 3;
+
     void Update()
     {
         //Assuming this is 3rd-person movement and the default Input Manager configuration is used.
