@@ -33,19 +33,30 @@ public class EnemyBehaviour : MonoBehaviour
 
         _tree = new BehaviourTree();
         Sequence attack = new Sequence("attack");
+        Leaf checkPlayerRange = new Leaf("check_player_range", CheckPlayerRange);
         Leaf goToWeaponA = new Leaf("go_to_weapon_A", GoToWeaponA);
         Leaf goToWeaponB = new Leaf("go_to_weapon_B", GoToWeaponB);
         Leaf attackPlayer = new Leaf("attack_player", AttackPlayer);
         Selector PickWeapon = new Selector("Pick_Weapon");
-
+       
         PickWeapon.AddChild(goToWeaponA);
         PickWeapon.AddChild(goToWeaponB);
 
+        attack.AddChild(checkPlayerRange);
         attack.AddChild(PickWeapon);
         attack.AddChild(attackPlayer);
         _tree.AddChild(attack);
 
         _tree.DebugTree();
+    }
+
+    public Node.Status CheckPlayerRange()
+    {
+        if(Vector3.Distance(transform.position, player.transform.position) < 6)
+        {
+            return Node.Status.SUCCESS;
+        }
+        return Node.Status.FAILED;
     }
 
     //every method you give to a No de has to use the same format as the Tick() method
@@ -127,9 +138,11 @@ public class EnemyBehaviour : MonoBehaviour
         return Node.Status.RUNNING;
     }
 
+    //while all actions have failed or are running we keep on updating
+    //we want to stop as soon as the player has died*
     void Update()
     {
-        if(treeStatus == Node.Status.RUNNING)
+        if(treeStatus != Node.Status.SUCCESS)
         {
             treeStatus = _tree.Process();
         }
