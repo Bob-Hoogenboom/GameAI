@@ -8,6 +8,8 @@ using UnityEngine;
 /// </summary>
 public class BehaviourTree : Node
 {
+    public Node activeNode { get; private set; }
+
     public BehaviourTree()
     {
         name = "Tree";
@@ -20,7 +22,8 @@ public class BehaviourTree : Node
 
     public override Status Process()
     {
-        return children[currentChild].Process();
+        activeNode = children[currentChild];  
+        return activeNode.Process();
     }
 
     struct NodeLevel 

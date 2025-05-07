@@ -1,9 +1,5 @@
-using System.Collections;
-using System.Collections.Generic;
-using System.Runtime.CompilerServices;
 using UnityEngine;
 using UnityEngine.AI;
-using static Astar;
 
 /// <summary>
 /// script attached to the enemy
@@ -14,6 +10,7 @@ public class EnemyBehaviour : MonoBehaviour
     private BehaviourTree _tree;
     private NavMeshAgent _agent;
     public GameObject player;
+    public NodeDebugger debugger;
 
     public float checkRange = 5f;
     public Vector3 patrolOrigin = new Vector3(0, 0, 0);
@@ -42,6 +39,7 @@ public class EnemyBehaviour : MonoBehaviour
         _agent = GetComponent<NavMeshAgent>();
 
         _tree = new BehaviourTree();
+        debugger.SetTree(_tree);
 
         // ----
         Leaf goToWeaponA = new Leaf("go_to_weapon_A", GoToWeaponA);
