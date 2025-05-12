@@ -15,6 +15,7 @@ public class EnemyBehaviour : MonoBehaviour
     public float checkRange = 5f;
     public Vector3 patrolOrigin = new Vector3(0, 0, 0);
 
+    //#TODO make a collective Enum for the ninja and Enemy
     public enum ActionState { IDLE, MOVING };
     ActionState state = ActionState.IDLE;
 
@@ -52,7 +53,7 @@ public class EnemyBehaviour : MonoBehaviour
         Leaf returnToOrigin = new Leaf("return_to_origin", ReturnToOrigin);
 
         Leaf checkPlayerRange = new Leaf("check_player_range", CheckPlayerRange);
-        Selector pickWeapon = new Selector("Pick_Weapon");
+        Selector pickWeapon = new Selector("pick_Weapon");
         pickWeapon.AddChild(goToWeaponA);
         pickWeapon.AddChild(goToWeaponB);
         Leaf attackPlayer = new Leaf("attack_player", AttackPlayer);
