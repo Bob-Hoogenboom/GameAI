@@ -15,6 +15,8 @@ public class Node
 
     public string name;
 
+    public static Node currentActiveNode;
+
     public Node() { }
     public Node(string n)
     {
@@ -29,5 +31,10 @@ public class Node
     public void AddChild(Node n)
     {
         children.Add(n);
+    }
+
+    protected void SetActive()
+    {
+        currentActiveNode = this;
     }
 }

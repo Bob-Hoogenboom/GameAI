@@ -11,6 +11,7 @@ public class Sequence : Node
 
     public override Status Process()
     {
+        SetActive();
         Status childStatus = children[currentChild].Process();
         if(childStatus == Status.RUNNING) return Status.RUNNING;
         if(childStatus == Status.FAILED) return childStatus;

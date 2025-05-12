@@ -225,4 +225,11 @@ public class EnemyBehaviour : MonoBehaviour
          treeStatus = _tree.Process();
        
     }
+
+    private void OnDrawGizmos()
+    {
+        Gizmos.DrawWireSphere(waypoint, 0.3f);
+        Gizmos.DrawWireSphere(transform.position, checkRange);
+        Gizmos.DrawWireSphere(transform.position, waypointRange);
+    }
 }

@@ -18,8 +18,14 @@ public class NodeDebugger : MonoBehaviour
     {
         transform.LookAt(_cam.transform);
 
-        Debug.Log(_behaviourTree.activeNode);
-        debugText.text = $"Active Node: {_behaviourTree.activeNode.name}";
+        if (Node.currentActiveNode != null)
+        {
+            debugText.text = $"Active Node: \n{Node.currentActiveNode.name}";
+        }
+        else
+        {
+            debugText.text = "Active Node: None";
+        }
     }
 
     public void SetTree(BehaviourTree tree)

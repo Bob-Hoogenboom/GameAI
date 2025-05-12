@@ -17,6 +17,7 @@ public class Leaf : Node
 
     public override Status Process()
     {
+        SetActive();
         if (ProcessMethod != null) return ProcessMethod();
         return Status.FAILED;
     }

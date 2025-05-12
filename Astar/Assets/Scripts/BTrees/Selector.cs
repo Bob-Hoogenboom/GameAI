@@ -11,6 +11,7 @@ public class Selector : Node
 
     public override Status Process()
     {
+        SetActive();
         Status childStatus = children[currentChild].Process();
         if (childStatus == Status.RUNNING) return Status.RUNNING;
 
