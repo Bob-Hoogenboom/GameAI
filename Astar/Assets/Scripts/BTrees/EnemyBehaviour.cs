@@ -22,6 +22,11 @@ public class EnemyBehaviour : MonoBehaviour
     Node.Status treeStatus = Node.Status.RUNNING;
 
 
+    [Header("Stun Variables")]
+    public bool isStunned = false;
+    public float stunDuration = 3f;
+    private float stunTimer = 3f;
+
     [Header("Patrol Variables")]    
     public Vector3 waypoint;
     public float waypointRange = 7f;
@@ -220,11 +225,27 @@ public class EnemyBehaviour : MonoBehaviour
 
     //while all actions have failed or are running we keep on updating
     //we want to stop as soon as the player has died*
-    void Update()
+    private void Update()
     {
-        
-         treeStatus = _tree.Process();
-       
+        if (isStunned)
+        {
+            stunTimer -= Time.deltaTime;
+            if (stunTimer <= 0f)
+            {
+                isStunned = false;
+                stunTimer = stunDuration;
+            }
+            return; 
+        }
+
+        treeStatus = _tree.Process();
+    }
+
+    public void StunEnemy()
+    {
+        isStunned = true;
+        _agent.ResetPath();
+        state = ActionState.IDLE;
     }
 
     private void OnDrawGizmos()

@@ -535,7 +535,7 @@ PrefabInstance:
     - target: {fileID: -8679921383154817045, guid: e581d056cb2d8e045892a91d75b7c37b,
         type: 3}
       propertyPath: m_LocalPosition.x
-      value: 0
+      value: 7.1
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: e581d056cb2d8e045892a91d75b7c37b,
         type: 3}
@@ -545,7 +545,7 @@ PrefabInstance:
     - target: {fileID: -8679921383154817045, guid: e581d056cb2d8e045892a91d75b7c37b,
         type: 3}
       propertyPath: m_LocalPosition.z
-      value: 0
+      value: -8.32
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: e581d056cb2d8e045892a91d75b7c37b,
         type: 3}
@@ -820,7 +820,7 @@ PrefabInstance:
     - target: {fileID: -8679921383154817045, guid: 3d6f4f95297ac3a40ac22d750c102d20,
         type: 3}
       propertyPath: m_LocalPosition.x
-      value: 5.63
+      value: 13.98
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 3d6f4f95297ac3a40ac22d750c102d20,
         type: 3}
@@ -830,7 +830,7 @@ PrefabInstance:
     - target: {fileID: -8679921383154817045, guid: 3d6f4f95297ac3a40ac22d750c102d20,
         type: 3}
       propertyPath: m_LocalPosition.z
-      value: 3.93
+      value: 4.6
       objectReference: {fileID: 0}
     - target: {fileID: -8679921383154817045, guid: 3d6f4f95297ac3a40ac22d750c102d20,
         type: 3}
@@ -968,8 +968,8 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1534991183}
   serializedVersion: 2
-  m_LocalRotation: {x: 0.0051145083, y: 0.8729837, z: -0.48763627, w: 0.009170904}
-  m_LocalPosition: {x: -0.21320486, y: 21.111252, z: 16.035698}
+  m_LocalRotation: {x: 0.009401505, y: -0.8163191, z: 0.57737374, w: 0.013204626}
+  m_LocalPosition: {x: 0.8728602, y: 28.341927, z: 11.9845295}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -1116,10 +1116,12 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   player: {fileID: 2093551462}
   debugger: {fileID: 880121395}
-  checkRange: 10
+  checkRange: 5
   patrolOrigin: {x: 0, y: 0, z: 0}
+  isStunned: 0
+  stunDuration: 3
   waypoint: {x: 0, y: 0, z: 0}
-  waypointRange: 15
+  waypointRange: 10
   weaponA: {fileID: 1568991872}
   weaponB: {fileID: 600537463}
 --- !u!195 &1633422363
