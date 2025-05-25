@@ -7,10 +7,10 @@ using UnityEngine.AI;
 public class EnemyBehaviour : MonoBehaviour
 {
     [Header("References")]
-    private BehaviourTree _tree;
-    private NavMeshAgent _agent;
     public GameObject player;
-    public NodeDebugger debugger;
+    public EnemyDebugger debugger;
+    public NavMeshAgent agent;
+    private BehaviourTree _tree;
 
     public float checkRange = 5f;
     public Vector3 patrolOrigin = new Vector3(0, 0, 0);
@@ -42,10 +42,12 @@ public class EnemyBehaviour : MonoBehaviour
 
     private void Start()
     {
-        _agent = GetComponent<NavMeshAgent>();
+        agent = GetComponent<NavMeshAgent>();
 
         _tree = new BehaviourTree();
         debugger.SetTree(_tree);
+
+
 
         // ----
         Leaf goToWeaponA = new Leaf("go_to_weapon_A", GoToWeaponA);
@@ -77,8 +79,8 @@ public class EnemyBehaviour : MonoBehaviour
 
         // -
         Selector enemyAction = new Selector("enemy_action");
-        enemyAction.AddChild(patrol);
         enemyAction.AddChild(attack);
+        enemyAction.AddChild(patrol);
         
         //~
         _tree.AddChild(enemyAction);
@@ -88,7 +90,9 @@ public class EnemyBehaviour : MonoBehaviour
 
     public Node.Status CheckPlayerRange()
     {
-        if(Vector3.Distance(transform.position, player.transform.position) < checkRange)
+        float dist = Vector3.Distance(transform.position, player.transform.position);
+
+        if (dist < checkRange)
         {
             return Node.Status.SUCCESS;
         }
@@ -152,7 +156,7 @@ public class EnemyBehaviour : MonoBehaviour
 
         _currentTimer -= Time.deltaTime;
 
-        if (distance <= 3)
+        if (distance <= checkRange)
         {
             PlayerMovement playerMove = player.GetComponent<PlayerMovement>();
             GoToLocation(transform.position);
@@ -170,8 +174,9 @@ public class EnemyBehaviour : MonoBehaviour
         }
         else
         {
-            if(distance >= 10)
+            if(distance >= waypointRange)
             {
+                Debug.Log("failed");
                 return Node.Status.FAILED;
             }
 
@@ -206,10 +211,10 @@ public class EnemyBehaviour : MonoBehaviour
         float distanceFromTarget = Vector3.Distance(transform.position, destination);
         if (state == ActionState.IDLE)
         {
-            _agent.SetDestination(destination);
+            agent.SetDestination(destination);
             state = ActionState.MOVING;
         }
-        else if (Vector3.Distance(_agent.pathEndPosition, destination) >= 1)
+        else if (Vector3.Distance(agent.pathEndPosition, destination) >= 1)
         {
             state = ActionState.IDLE;
             return Node.Status.FAILED;
@@ -244,7 +249,7 @@ public class EnemyBehaviour : MonoBehaviour
     public void StunEnemy()
     {
         isStunned = true;
-        _agent.ResetPath();
+        agent.ResetPath();
         state = ActionState.IDLE;
     }
 

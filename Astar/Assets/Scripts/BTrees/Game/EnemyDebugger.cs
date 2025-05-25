@@ -1,7 +1,7 @@
 using TMPro;
 using UnityEngine;
 
-public class NodeDebugger : MonoBehaviour
+public class EnemyDebugger : MonoBehaviour
 {
     public EnemyBehaviour enemy;
     public TMP_Text debugText;
@@ -18,9 +18,9 @@ public class NodeDebugger : MonoBehaviour
     {
         transform.LookAt(_cam.transform);
 
-        if (Node.currentActiveNode != null)
+        if (_behaviourTree != null && _behaviourTree.activeNode != null)
         {
-            debugText.text = $"Active Node: \n{Node.currentActiveNode.name}";
+            debugText.text = $"Active Node: \n{_behaviourTree.activeNode.name}";
         }
         else
         {
@@ -31,5 +31,10 @@ public class NodeDebugger : MonoBehaviour
     public void SetTree(BehaviourTree tree)
     {
         _behaviourTree = tree;
+    }
+
+    public BehaviourTree GetTree()
+    {
+        return _behaviourTree;
     }
 }

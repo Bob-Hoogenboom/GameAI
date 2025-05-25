@@ -8,8 +8,8 @@ public class NinjaBehaviour : MonoBehaviour
     [SerializeField] private List<Transform> hidingSpots = new List<Transform>();
     public GameObject player;
     public GameObject enemy;
-    public NodeDebugger debugger;
-    private NavMeshAgent _agent;
+    public NinjaDebugger debugger;
+    public NavMeshAgent agent;
     private BehaviourTree _tree;
 
     [Header("Variables")]
@@ -25,10 +25,12 @@ public class NinjaBehaviour : MonoBehaviour
 
     private void Start()
     {
-        _agent = GetComponent<NavMeshAgent>();
+        agent = GetComponent<NavMeshAgent>();
 
         _tree = new BehaviourTree();
         debugger.SetTree(_tree);
+
+        _tree.DebugTree();
 
 
         //---
@@ -39,7 +41,12 @@ public class NinjaBehaviour : MonoBehaviour
 
         //--
         Leaf followPlayer = new Leaf("follow_player", FollowPlayer);
+
         Sequence hide = new Sequence("hide");
+        hide.AddChild(checkEnemyRange);
+        hide.AddChild(getWaypoint);
+        hide.AddChild(goToWaypoint);
+        hide.AddChild(confuseEnemy);
 
         //-
         Selector ninjaAction = new Selector("ninja_action");
@@ -50,12 +57,13 @@ public class NinjaBehaviour : MonoBehaviour
         //~
         _tree.AddChild(ninjaAction);
 
-        _tree.DebugTree();
     }
 
     public Node.Status CheckEnemyRange()
     {
-        if (Vector3.Distance(transform.position, enemy.transform.position) < checkRange)
+        float dist = Vector3.Distance(transform.position, enemy.transform.position);
+
+        if (dist < checkRange)
         {
             return Node.Status.SUCCESS;
         }
@@ -92,10 +100,10 @@ public class NinjaBehaviour : MonoBehaviour
         float distanceFromTarget = Vector3.Distance(transform.position, destination);
         if (state == ActionState.IDLE)
         {
-            _agent.SetDestination(destination);
+            agent.SetDestination(destination);
             state = ActionState.MOVING;
         }
-        else if (Vector3.Distance(_agent.pathEndPosition, destination) >= 1)
+        else if (Vector3.Distance(agent.pathEndPosition, destination) >= 1)
         {
             state = ActionState.IDLE;
             return Node.Status.FAILED;
@@ -111,7 +119,8 @@ public class NinjaBehaviour : MonoBehaviour
 
     public Node.Status FollowPlayer()
     {
-        return Node.Status.FAILED;
+        if (CheckEnemyRange() == Node.Status.SUCCESS) { return Node.Status.FAILED; }
+        return GoToLocation(player.transform.position);
     }
 
     public Node.Status ThrowSmokeBomb()
@@ -127,5 +136,10 @@ public class NinjaBehaviour : MonoBehaviour
     private void Update()
     {
         treeStatus = _tree.Process();
+    }
+
+    private void OnDrawGizmos()
+    {
+        Gizmos.DrawWireSphere(transform.position, checkRange);
     }
 }
