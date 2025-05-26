@@ -174,7 +174,7 @@ MonoBehaviour:
   - {fileID: 1082516825}
   - {fileID: 1253537568}
   player: {fileID: 2093551462}
-  enemy: {fileID: 1633422360}
+  enemy: {fileID: 1633422362}
   debugger: {fileID: 1795375519}
   agent: {fileID: 27083141}
   checkRange: 2.3
@@ -1595,6 +1595,7 @@ MonoBehaviour:
   player: {fileID: 2093551462}
   debugger: {fileID: 880121395}
   agent: {fileID: 1633422363}
+  isAttackingPlayer: 0
   checkRange: 5
   patrolOrigin: {x: 0, y: 0, z: 0}
   isStunned: 0

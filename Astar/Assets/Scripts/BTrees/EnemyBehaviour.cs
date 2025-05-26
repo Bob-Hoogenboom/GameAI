@@ -12,6 +12,7 @@ public class EnemyBehaviour : MonoBehaviour
     public NavMeshAgent agent;
     private BehaviourTree _tree;
 
+    public bool isAttackingPlayer = false;
     public float checkRange = 5f;
     public Vector3 patrolOrigin = new Vector3(0, 0, 0);
 
@@ -94,8 +95,10 @@ public class EnemyBehaviour : MonoBehaviour
 
         if (dist < checkRange)
         {
+            isAttackingPlayer = true;
             return Node.Status.SUCCESS;
         }
+        isAttackingPlayer = false;
         return Node.Status.FAILED;
     }
 
@@ -238,6 +241,7 @@ public class EnemyBehaviour : MonoBehaviour
             if (stunTimer <= 0f)
             {
                 isStunned = false;
+                isAttackingPlayer = false;
                 stunTimer = stunDuration;
             }
             return; 

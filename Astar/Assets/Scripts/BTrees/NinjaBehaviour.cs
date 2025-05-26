@@ -7,7 +7,7 @@ public class NinjaBehaviour : MonoBehaviour
     [Header("References")]
     [SerializeField] private List<Transform> hidingSpots = new List<Transform>();
     public GameObject player;
-    public GameObject enemy;
+    public EnemyBehaviour enemy;
     public NinjaDebugger debugger;
     public NavMeshAgent agent;
     private BehaviourTree _tree;
@@ -22,6 +22,9 @@ public class NinjaBehaviour : MonoBehaviour
 
     Node.Status treeStatus = Node.Status.RUNNING;
 
+    [Header("SmokeBomb Variables")]
+    private float _timer = 3f;
+    private float _currentTimer = 3f;
 
     private void Start()
     {
@@ -30,11 +33,10 @@ public class NinjaBehaviour : MonoBehaviour
         _tree = new BehaviourTree();
         debugger.SetTree(_tree);
 
-        _tree.DebugTree();
 
 
         //---
-        Leaf checkEnemyRange = new Leaf("check_enemy_range", CheckEnemyRange);
+        Leaf checkEnemyAttacking = new Leaf("check_enemy_attacking", CheckEnemyAttack);
         Leaf getWaypoint = new Leaf("get_waypoint", GetNewWaypoint);
         Leaf goToWaypoint = new Leaf("go_to_waypoint", GoToWaypoint);
         Leaf confuseEnemy = new Leaf("confuse_enemy", ThrowSmokeBomb);
@@ -43,7 +45,7 @@ public class NinjaBehaviour : MonoBehaviour
         Leaf followPlayer = new Leaf("follow_player", FollowPlayer);
 
         Sequence hide = new Sequence("hide");
-        hide.AddChild(checkEnemyRange);
+        hide.AddChild(checkEnemyAttacking);
         hide.AddChild(getWaypoint);
         hide.AddChild(goToWaypoint);
         hide.AddChild(confuseEnemy);
@@ -52,18 +54,16 @@ public class NinjaBehaviour : MonoBehaviour
         Selector ninjaAction = new Selector("ninja_action");
         ninjaAction.AddChild(followPlayer);
         ninjaAction.AddChild(hide);
-        ninjaAction.AddChild(confuseEnemy);
 
         //~
         _tree.AddChild(ninjaAction);
 
+        _tree.DebugTree();
     }
 
-    public Node.Status CheckEnemyRange()
+    public Node.Status CheckEnemyAttack()
     {
-        float dist = Vector3.Distance(transform.position, enemy.transform.position);
-
-        if (dist < checkRange)
+        if (enemy.isAttackingPlayer)
         {
             return Node.Status.SUCCESS;
         }
@@ -91,7 +91,7 @@ public class NinjaBehaviour : MonoBehaviour
     public Node.Status GoToWaypoint()
     {
         //check if player is in range when going to the waypoint
-        if (CheckEnemyRange() == Node.Status.SUCCESS) { return Node.Status.FAILED; }
+        if (CheckEnemyAttack() == Node.Status.SUCCESS) { return Node.Status.FAILED; }
         return GoToLocation(_idealHidingSpot.position);
     }
 
@@ -119,17 +119,24 @@ public class NinjaBehaviour : MonoBehaviour
 
     public Node.Status FollowPlayer()
     {
-        if (CheckEnemyRange() == Node.Status.SUCCESS) { return Node.Status.FAILED; }
+        if (CheckEnemyAttack() == Node.Status.SUCCESS) { return Node.Status.FAILED; }
         return GoToLocation(player.transform.position);
     }
 
     public Node.Status ThrowSmokeBomb()
     {
 
-        EnemyBehaviour targetEnemy = enemy.GetComponent<EnemyBehaviour>();
-        targetEnemy.StunEnemy();
+        _currentTimer -= Time.deltaTime;
+
+        if (_currentTimer < 0)
+        {
+            _currentTimer = _timer;
+            EnemyBehaviour targetEnemy = enemy.GetComponent<EnemyBehaviour>();
+            targetEnemy.StunEnemy();
+            return Node.Status.SUCCESS;
+        }
         
-        return Node.Status.FAILED;
+        return Node.Status.RUNNING;
     }
 
     // Update is called once per frame
